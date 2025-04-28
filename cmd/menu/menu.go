@@ -1,43 +1,45 @@
 package menu
 
+import "github.com/FrancoMusolino/film-cli/cmd/movies"
+
 type Item struct {
 	Name, Headers string
-	Action        func() error
+	GetMovies     func(s movies.MoviesService) []movies.Movie
 }
 
 type Menu struct {
-	Items map[string]Item
+	Items []Item
 }
 
 func InitMenu() *Menu {
 	menu := &Menu{
-		map[string]Item{
-			"top-rated": {
+		[]Item{
+			{
 				Name:    "Mejor calificadas",
 				Headers: "Obten las películas mejores calificadas",
-				Action: func() error {
-					return nil
+				GetMovies: func(s movies.MoviesService) []movies.Movie {
+					return s.GetTopRatedMovies()
 				},
 			},
-			"now-playing": {
+			{
 				Name:    "Reproduciendo ahora",
 				Headers: "Obten las películas que se están reproduciendo en las pantallas de los cines",
-				Action: func() error {
-					return nil
+				GetMovies: func(s movies.MoviesService) []movies.Movie {
+					return s.GetNowPlayingMovies()
 				},
 			},
-			"popular": {
+			{
 				Name:    "Populares",
 				Headers: "Obten las películas más populares del momento",
-				Action: func() error {
-					return nil
+				GetMovies: func(s movies.MoviesService) []movies.Movie {
+					return s.GetPopularMovies()
 				},
 			},
-			"upcoming": {
+			{
 				Name:    "Próximamente",
 				Headers: "Obten las películas que estarán en cartelera en los próximos días",
-				Action: func() error {
-					return nil
+				GetMovies: func(s movies.MoviesService) []movies.Movie {
+					return s.GetUpcomingMovies()
 				},
 			},
 		},
