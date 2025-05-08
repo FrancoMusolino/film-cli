@@ -15,10 +15,10 @@ var (
 )
 
 type Selection struct {
-	Choice *menu.Item
+	Choice string
 }
 
-func (s *Selection) Update(v *menu.Item) {
+func (s *Selection) Update(v string) {
 	s.Choice = v
 }
 
@@ -61,7 +61,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "enter", " ":
-			m.choice.Update(&m.choices[m.cursor])
+			m.choice.Update(m.choices[m.cursor].Key)
 			return m, tea.Quit
 		}
 	}
@@ -74,7 +74,7 @@ func (m model) View() string {
 
 	for i, choice := range m.choices {
 		cursor := " "
-		if m.cursor == i {
+		if i == m.cursor {
 			cursor = focusedStyle.Render(">")
 			choice.Name = selectedItemStyle.Render(choice.Name)
 		}
