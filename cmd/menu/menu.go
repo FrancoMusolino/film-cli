@@ -1,61 +1,45 @@
 package menu
 
 import (
-	"errors"
-	"slices"
+	"fmt"
+	"strings"
 
 	"github.com/FrancoMusolino/film-cli/cmd/movies"
 )
 
 type Item struct {
 	Key, Name, Headers string
-	GetMovies          func(s movies.MoviesService) []movies.Movie
 }
 
-var AllowedItemKeys = []string{"top-rated", "popular", "now-playing", "upcoming"}
-
-func isValidItemKey(key string) bool {
-	return slices.Contains(AllowedItemKeys, key)
-}
+var MainMenuItemKeys = []string{"top-rated", "popular", "now-playing", "upcoming"}
 
 type Menu struct {
-	Items []Item
+	Items  []Item
+	Movies []Item
 }
 
 func InitMenu() *Menu {
 	menu := &Menu{
-		[]Item{
+		Items: []Item{
 			{
 				Key:     "top-rated",
 				Name:    "Mejor calificadas",
 				Headers: "Obten las películas mejores calificadas",
-				GetMovies: func(s movies.MoviesService) []movies.Movie {
-					return s.GetTopRatedMovies()
-				},
 			},
 			{
 				Key:     "now-playing",
 				Name:    "Reproduciendo ahora",
 				Headers: "Obten las películas que se están reproduciendo en las pantallas de los cines",
-				GetMovies: func(s movies.MoviesService) []movies.Movie {
-					return s.GetNowPlayingMovies()
-				},
 			},
 			{
 				Key:     "popular",
 				Name:    "Populares",
 				Headers: "Obten las películas más populares del momento",
-				GetMovies: func(s movies.MoviesService) []movies.Movie {
-					return s.GetPopularMovies()
-				},
 			},
 			{
 				Key:     "upcoming",
 				Name:    "Próximamente",
 				Headers: "Obten las películas que estarán en cartelera en los próximos días",
-				GetMovies: func(s movies.MoviesService) []movies.Movie {
-					return s.GetUpcomingMovies()
-				},
 			},
 		},
 	}
@@ -63,16 +47,22 @@ func InitMenu() *Menu {
 	return menu
 }
 
-func (m *Menu) FindItemOnMenu(key string) (*Item, error) {
-	if !isValidItemKey(key) {
-		return nil, errors.New("invalid menu item key")
+func (m *Menu) SetMenuMovies(movies []movies.Movie) {
+	var items []Item
+
+	for _, m := range movies {
+		items = append(items, Item{Key: m.OriginalTitle, Name: m.Title, Headers: formatMovieOverview(m.Overview, 20)})
 	}
 
-	for _, item := range m.Items {
-		if item.Key == key {
-			return &item, nil
-		}
+	m.Movies = items
+}
+
+func formatMovieOverview(overview string, maxWords int) string {
+	s := strings.Split(overview, " ")
+
+	if len(s) <= maxWords {
+		return strings.Join(s, " ")
 	}
 
-	return nil, errors.New("key valid, but not added to menu list")
+	return fmt.Sprintf("%s...", strings.Join(s[:maxWords], " "))
 }

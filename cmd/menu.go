@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -18,7 +17,8 @@ func init() {
 }
 
 type Options struct {
-	MenuItem *multiInput.Selection
+	MenuItem  *multiInput.Selection
+	MovieItem *multiInput.Selection
 }
 
 var menuCmd = &cobra.Command{
@@ -31,7 +31,8 @@ var menuCmd = &cobra.Command{
 		moviesService := movies.NewMoviesService()
 
 		options := Options{
-			MenuItem: &multiInput.Selection{},
+			MenuItem:  &multiInput.Selection{},
+			MovieItem: &multiInput.Selection{},
 		}
 
 		tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Items, options.MenuItem, "Elige una opción de nuestro menú"))
@@ -39,15 +40,33 @@ var menuCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		item, err := menu.FindItemOnMenu(options.MenuItem.Choice)
-		if err != nil {
+		s := spinner.New(spinner.CharSets[37], 100*time.Millisecond)
+		s.Start()
+		movies := getMoviesBySelectedMenuKey(options.MenuItem.Choice, moviesService)
+		menu.SetMenuMovies(movies)
+		s.Stop()
+
+		tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Movies, options.MenuItem, "Elige una película"))
+		if _, err := tprogram.Run(); err != nil {
 			log.Fatal(err)
 		}
 
-		s := spinner.New(spinner.CharSets[37], 100*time.Millisecond) // Build our new spinner
-		s.Start()                                                    // Start the spinner
-		movies := item.GetMovies(moviesService)
-		s.Stop()
-		fmt.Println(movies)
 	},
+}
+
+func getMoviesBySelectedMenuKey(key string, moviesService movies.MoviesService) []movies.Movie {
+	var movies []movies.Movie
+
+	switch key {
+	case "top-rated":
+		movies = moviesService.GetTopRatedMovies()
+	case "popular":
+		movies = moviesService.GetPopularMovies()
+	case "now-playing":
+		movies = moviesService.GetNowPlayingMovies()
+	case "upcoming":
+		movies = moviesService.GetUpcomingMovies()
+	}
+
+	return movies[:6]
 }
