@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/FrancoMusolino/film-cli/cmd/menu"
@@ -46,10 +48,15 @@ var menuCmd = &cobra.Command{
 		menu.SetMenuMovies(movies)
 		s.Stop()
 
-		tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Movies, options.MenuItem, "Elige una película"))
+		tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Movies, options.MovieItem, "Elige una película"))
 		if _, err := tprogram.Run(); err != nil {
 			log.Fatal(err)
 		}
+
+		i, _ := strconv.Atoi(options.MovieItem.Choice)
+		fmt.Println()
+		detail, _ := moviesService.GetMovieDetail(i)
+		fmt.Println(detail)
 
 	},
 }

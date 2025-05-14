@@ -1,16 +1,20 @@
 package movies
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/FrancoMusolino/film-cli/cmd/utils"
 )
 
 const url = "https://api.themoviedb.org/3"
+
+type Header struct {
+	key, value string
+}
 
 type TmdbService struct {
 	accessToken string
@@ -27,84 +31,80 @@ func NewMoviesService() MoviesService {
 	}
 }
 
-func (ts TmdbService) doRequest(method, path string) ([]byte, error) {
+func (ts TmdbService) getAccessTokenBearerHeader() Header {
+	return Header{
+		key:   "Authorization",
+		value: fmt.Sprintf("Bearer %s", ts.accessToken),
+	}
+}
+
+func doRequest[T any](method, path string, headers []Header) (T, error) {
+	var zeroValue T
+
 	req, _ := http.NewRequest(method, strings.Join([]string{url, path}, ""), nil)
 
 	req.Header.Add("accept", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", ts.accessToken))
+	for _, header := range headers {
+		req.Header.Add(header.key, header.value)
+	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return zeroValue, err
+	}
+	defer res.Body.Close()
+
+	data, err := utils.Decode[T](res.Body)
+	if err != nil {
+		return zeroValue, err
 	}
 
-	defer res.Body.Close()
-	body, _ := io.ReadAll(res.Body)
-
-	return body, nil
+	return data, nil
 }
 
 func (ts TmdbService) GetNowPlayingMovies() []Movie {
-	var response BaseResponse[Movie]
-
-	b, err := ts.doRequest("GET", "/movie/now_playing?language=es-AR&page=1")
+	data, err := doRequest[ResponseWithPagination[Movie]]("GET", "/movie/now_playing?language=es-AR&page=1", []Header{ts.getAccessTokenBearerHeader()})
 	if err != nil {
-		return response.Results
+		return []Movie{}
 	}
 
-	if err := json.Unmarshal(b, &response); err != nil {
-		log.Fatal(err)
-	}
-
-	return response.Results
+	return data.Results
 }
 
 func (ts TmdbService) GetPopularMovies() []Movie {
-	var response BaseResponse[Movie]
-
-	b, err := ts.doRequest("GET", "/movie/popular?language=es-AR&page=1")
+	data, err := doRequest[ResponseWithPagination[Movie]]("GET", "/movie/popular?language=es-AR&page=1", []Header{ts.getAccessTokenBearerHeader()})
 	if err != nil {
-		return response.Results
+		return []Movie{}
 	}
 
-	if err := json.Unmarshal(b, &response); err != nil {
-		log.Fatal(err)
-	}
-
-	return response.Results
+	return data.Results
 }
 
 func (ts TmdbService) GetTopRatedMovies() []Movie {
-	var response BaseResponse[Movie]
-
-	b, err := ts.doRequest("GET", "/movie/top_rated?language=es-AR&page=1")
+	data, err := doRequest[ResponseWithPagination[Movie]]("GET", "/movie/top_rated?language=es-AR&page=1", []Header{ts.getAccessTokenBearerHeader()})
 	if err != nil {
-		return response.Results
+		return []Movie{}
 	}
 
-	if err := json.Unmarshal(b, &response); err != nil {
-		log.Fatal(err)
-	}
-
-	return response.Results
+	return data.Results
 }
 
 func (ts TmdbService) GetUpcomingMovies() []Movie {
-	var response BaseResponse[Movie]
-
-	b, err := ts.doRequest("GET", "/movie/upcoming?language=es-AR&page=1")
+	data, err := doRequest[ResponseWithPagination[Movie]]("GET", "/movie/upcoming?language=es-AR&page=1", []Header{ts.getAccessTokenBearerHeader()})
 	if err != nil {
-		return response.Results
+		return []Movie{}
 	}
 
-	if err := json.Unmarshal(b, &response); err != nil {
-		log.Fatal(err)
-	}
-
-	return response.Results
+	return data.Results
 }
 
-type BaseResponse[T any] struct {
-	Page    int `json:"page"`
-	Results []T `json:"results"`
+func (ts TmdbService) GetMovieDetail(id int) (MovieDetail, error) {
+	var zeroValue MovieDetail
+
+	data, err := doRequest[MovieDetail]("GET", fmt.Sprintf("/movie/%v?language=en-US", id), []Header{ts.getAccessTokenBearerHeader()})
+	if err != nil {
+		return zeroValue, fmt.Errorf("no se ha encontrado a la película con ID %v", id)
+	}
+
+	return data, nil
 }

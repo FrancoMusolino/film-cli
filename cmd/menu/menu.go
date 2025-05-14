@@ -51,7 +51,7 @@ func (m *Menu) SetMenuMovies(movies []movies.Movie) {
 	var items []Item
 
 	for _, m := range movies {
-		items = append(items, Item{Key: m.OriginalTitle, Name: m.Title, Headers: formatMovieOverview(m.Overview, 20)})
+		items = append(items, Item{Key: fmt.Sprintf("%v", m.ID), Name: m.Title, Headers: formatMovieOverview(m.Overview, 20)})
 	}
 
 	m.Movies = items
