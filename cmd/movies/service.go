@@ -101,7 +101,7 @@ func (ts TmdbService) GetUpcomingMovies() []Movie {
 func (ts TmdbService) GetMovieDetail(id int) (MovieDetail, error) {
 	var zeroValue MovieDetail
 
-	data, err := doRequest[MovieDetail]("GET", fmt.Sprintf("/movie/%v?language=en-US", id), []Header{ts.getAccessTokenBearerHeader()})
+	data, err := doRequest[MovieDetail]("GET", fmt.Sprintf("/movie/%v?language=es-AR", id), []Header{ts.getAccessTokenBearerHeader()})
 	if err != nil {
 		return zeroValue, fmt.Errorf("no se ha encontrado a la película con ID %v", id)
 	}

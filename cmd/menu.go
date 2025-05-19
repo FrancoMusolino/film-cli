@@ -9,6 +9,7 @@ import (
 	"github.com/FrancoMusolino/film-cli/cmd/menu"
 	"github.com/FrancoMusolino/film-cli/cmd/movies"
 	"github.com/FrancoMusolino/film-cli/cmd/ui/multiInput"
+	"github.com/FrancoMusolino/film-cli/cmd/ui/printMovie"
 	"github.com/briandowns/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -56,7 +57,8 @@ var menuCmd = &cobra.Command{
 		i, _ := strconv.Atoi(options.MovieItem.Choice)
 		fmt.Println()
 		detail, _ := moviesService.GetMovieDetail(i)
-		fmt.Println(detail)
+
+		printMovie.Print(detail)
 
 	},
 }
