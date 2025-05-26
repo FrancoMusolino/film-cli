@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/FrancoMusolino/film-cli/cmd/menu"
@@ -29,6 +30,9 @@ var menuCmd = &cobra.Command{
 	Short: "Navega sobre nuestro menú y explora las mejores películas",
 	Long:  "Explora las mejores películas de la historia, las que se están reproduciendo ahora, las más populares y demás!! Ideal para un pasionado del séptimo arte",
 	Run: func(cmd *cobra.Command, args []string) {
+		var wg sync.WaitGroup
+		stepChan := make(chan int, 10)
+
 		var tprogram *tea.Program
 		menu := menu.InitMenu()
 		moviesService := movies.NewMoviesService()
@@ -38,28 +42,49 @@ var menuCmd = &cobra.Command{
 			MovieItem: &multiInput.Selection{},
 		}
 
-		tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Items, options.MenuItem, "Elige una opción de nuestro menú"))
-		if _, err := tprogram.Run(); err != nil {
-			log.Fatal(err)
-		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 
-		s := spinner.New(spinner.CharSets[37], 100*time.Millisecond)
-		s.Start()
-		movies := getMoviesBySelectedMenuKey(options.MenuItem.Choice, moviesService)
-		menu.SetMenuMovies(movies)
-		s.Stop()
+			for i := range stepChan {
+				switch i {
+				case 1:
+					fmt.Println(options.MenuItem)
+					tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Items, options.MenuItem, "Elige una opción de nuestro menú", 1, stepChan))
+					if _, err := tprogram.Run(); err != nil {
+						log.Fatal(err)
+					}
+				case 2:
+					s := spinner.New(spinner.CharSets[37], 100*time.Millisecond)
+					s.Start()
+					movies := getMoviesBySelectedMenuKey(options.MenuItem.Choice, moviesService)
+					menu.SetMenuMovies(movies)
+					s.Stop()
 
-		tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Movies, options.MovieItem, "Elige una película"))
-		if _, err := tprogram.Run(); err != nil {
-			log.Fatal(err)
-		}
+					tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Movies, options.MovieItem, "Elige una película", 2, stepChan))
+					if _, err := tprogram.Run(); err != nil {
+						log.Fatal(err)
+					}
+				case 3:
+					i, _ := strconv.Atoi(options.MovieItem.Choice)
 
-		i, _ := strconv.Atoi(options.MovieItem.Choice)
-		fmt.Println()
-		detail, _ := moviesService.GetMovieDetail(i)
+					s := spinner.New(spinner.CharSets[37], 100*time.Millisecond)
+					s.Start()
+					fmt.Println()
+					detail, _ := moviesService.GetMovieDetail(i)
+					s.Stop()
 
-		printMovie.Print(detail)
+					printMovie.Print(detail)
 
+				default:
+					close(stepChan)
+				}
+
+			}
+		}()
+
+		stepChan <- 1
+		wg.Wait()
 	},
 }
 

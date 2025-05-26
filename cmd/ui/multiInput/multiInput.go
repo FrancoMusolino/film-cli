@@ -25,21 +25,34 @@ func (s *Selection) Update(v string) {
 }
 
 type model struct {
-	choices []menu.Item
-	cursor  int
-	choice  *Selection
-	header  string
+	choices    []menu.Item
+	cursor     int
+	choice     *Selection
+	header     string
+	stepChan   chan int
+	stepNumber int
 }
 
 func (m model) Init() tea.Cmd {
 	return nil
 }
 
-func InitialModelMulti(choices []menu.Item, selection *Selection, header string) model {
+func InitialModelMulti(choices []menu.Item, selection *Selection, header string, stepNumber int, stepChan chan int) model {
+	var cursor int
+	for i, choice := range choices {
+		if choice.Key == selection.Choice {
+			cursor = i
+			break
+		}
+	}
+
 	return model{
-		choices: choices,
-		choice:  selection,
-		header:  titleStyle.Render(header),
+		cursor:     cursor,
+		choices:    choices,
+		choice:     selection,
+		header:     titleStyle.Render(header),
+		stepChan:   stepChan,
+		stepNumber: stepNumber,
 	}
 }
 
@@ -50,6 +63,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		case "ctrl+c", "q":
+			m.stepChan <- 0
 			return m, tea.Quit
 
 		case "up", "k":
@@ -64,8 +78,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter", " ":
 			m.choice.Update(m.choices[m.cursor].Key)
+			m.stepChan <- m.stepNumber + 1
+			return m, tea.Quit
+
+		case "esc":
+			m.stepChan <- m.stepNumber - 1
 			return m, tea.Quit
 		}
+
 	}
 
 	return m, nil
@@ -89,5 +109,6 @@ func (m model) View() string {
 	}
 
 	s += fmt.Sprintf("Persiona %s para confirmar la selección.\n\n", focusedStyle.Render("Enter"))
+	s += fmt.Sprintf("Persiona %s para volver atrás o salir del menú.\n\n", focusedStyle.Render("Esc"))
 	return s
 }
