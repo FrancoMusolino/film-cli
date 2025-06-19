@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/FrancoMusolino/film-cli/cmd/menu"
@@ -30,8 +29,8 @@ var menuCmd = &cobra.Command{
 	Short: "Navega sobre nuestro menú y explora las mejores películas",
 	Long:  "Explora las mejores películas de la historia, las que se están reproduciendo ahora, las más populares y demás!! Ideal para un pasionado del séptimo arte",
 	Run: func(cmd *cobra.Command, args []string) {
-		var wg sync.WaitGroup
 		stepChan := make(chan int, 10)
+		doneChan := make(chan bool)
 
 		var tprogram *tea.Program
 		menu := menu.InitMenu()
@@ -42,14 +41,10 @@ var menuCmd = &cobra.Command{
 			MovieItem: &multiInput.Selection{},
 		}
 
-		wg.Add(1)
 		go func() {
-			defer wg.Done()
-
 			for i := range stepChan {
 				switch i {
 				case 1:
-					fmt.Println(options.MenuItem)
 					tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Items, options.MenuItem, "Elige una opción de nuestro menú", 1, stepChan))
 					if _, err := tprogram.Run(); err != nil {
 						log.Fatal(err)
@@ -74,17 +69,23 @@ var menuCmd = &cobra.Command{
 					detail, _ := moviesService.GetMovieDetail(i)
 					s.Stop()
 
-					printMovie.Print(detail)
+					tprogram = tea.NewProgram(printMovie.InitialModel(detail, stepChan))
+					if _, err := tprogram.Run(); err != nil {
+						log.Fatal(err)
+					}
 
 				default:
-					close(stepChan)
+					fmt.Println("In default case")
+					doneChan <- true
 				}
 
 			}
 		}()
 
 		stepChan <- 1
-		wg.Wait()
+		<-doneChan
+		close(stepChan)
+		close(doneChan)
 	},
 }
 
