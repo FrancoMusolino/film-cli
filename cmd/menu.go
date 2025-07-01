@@ -6,17 +6,24 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/FrancoMusolino/film-cli/cmd/flags"
 	"github.com/FrancoMusolino/film-cli/cmd/menu"
 	"github.com/FrancoMusolino/film-cli/cmd/movies"
 	"github.com/FrancoMusolino/film-cli/cmd/ui/multiInput"
 	"github.com/FrancoMusolino/film-cli/cmd/ui/printMovie"
+	"github.com/FrancoMusolino/film-cli/cmd/utils"
 	"github.com/briandowns/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
 func init() {
+	var lang flags.Lang
+
 	rootCmd.AddCommand(menuCmd)
+	menuCmd.Flags().VarP(&lang, "lang", "l", "Idioma de la aplicación (es o en)")
+
+	utils.RegisterStaticCompletions(menuCmd, "lang", flags.AllowedLangs)
 }
 
 type Options struct {
@@ -29,12 +36,19 @@ var menuCmd = &cobra.Command{
 	Short: "Navega sobre nuestro menú y explora las mejores películas",
 	Long:  "Explora las mejores películas de la historia, las que se están reproduciendo ahora, las más populares y demás!! Ideal para un pasionado del séptimo arte",
 	Run: func(cmd *cobra.Command, args []string) {
+		flagLang := flags.Lang(cmd.Flag("lang").Value.String())
+		if flagLang == "" {
+			flagLang = flags.Lang(flags.DefaultLang)
+		}
+
+		fmt.Println(flagLang)
+
 		stepChan := make(chan int, 10)
 		doneChan := make(chan bool)
 
 		var tprogram *tea.Program
 		menu := menu.InitMenu()
-		moviesService := movies.NewMoviesService()
+		moviesService := movies.NewMoviesService(flagLang)
 
 		options := Options{
 			MenuItem:  &multiInput.Selection{},
@@ -75,7 +89,6 @@ var menuCmd = &cobra.Command{
 					}
 
 				default:
-					fmt.Println("In default case")
 					doneChan <- true
 				}
 
