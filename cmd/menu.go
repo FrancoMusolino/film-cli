@@ -9,11 +9,13 @@ import (
 	"github.com/FrancoMusolino/film-cli/cmd/flags"
 	"github.com/FrancoMusolino/film-cli/cmd/menu"
 	"github.com/FrancoMusolino/film-cli/cmd/movies"
+	"github.com/FrancoMusolino/film-cli/cmd/program"
 	"github.com/FrancoMusolino/film-cli/cmd/ui/multiInput"
 	"github.com/FrancoMusolino/film-cli/cmd/ui/printMovie"
 	"github.com/FrancoMusolino/film-cli/cmd/utils"
 	"github.com/briandowns/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/nicksnyder/go-i18n/i18n"
 	"github.com/spf13/cobra"
 )
 
@@ -41,14 +43,23 @@ var menuCmd = &cobra.Command{
 			flagLang = flags.Lang(flags.DefaultLang)
 		}
 
-		fmt.Println(flagLang)
+		T, err := i18n.Tfunc(string(flagLang), flags.AllowedLangs...)
+		if err != nil {
+			log.Fatal("Cannot load transaltions")
+		}
 
-		stepChan := make(chan int, 10)
-		doneChan := make(chan bool)
+		moviesService := movies.NewMoviesService(flagLang)
+
+		program := program.Program{
+			Lang:          flagLang,
+			Translate:     T,
+			MoviesService: moviesService,
+			StepChan:      make(chan int, 10),
+			DoneChan:      make(chan bool),
+		}
 
 		var tprogram *tea.Program
-		menu := menu.InitMenu()
-		moviesService := movies.NewMoviesService(flagLang)
+		menu := menu.InitMenu(program.Translate)
 
 		options := Options{
 			MenuItem:  &multiInput.Selection{},
@@ -56,10 +67,10 @@ var menuCmd = &cobra.Command{
 		}
 
 		go func() {
-			for i := range stepChan {
+			for i := range program.StepChan {
 				switch i {
 				case 1:
-					tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Items, options.MenuItem, "Elige una opción de nuestro menú", 1, stepChan))
+					tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Items, options.MenuItem, program.Translate("choose-option"), &program, 1))
 					if _, err := tprogram.Run(); err != nil {
 						log.Fatal(err)
 					}
@@ -70,7 +81,7 @@ var menuCmd = &cobra.Command{
 					menu.SetMenuMovies(movies)
 					s.Stop()
 
-					tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Movies, options.MovieItem, "Elige una película", 2, stepChan))
+					tprogram = tea.NewProgram(multiInput.InitialModelMulti(menu.Movies, options.MovieItem, program.Translate("choose-movie"), &program, 2))
 					if _, err := tprogram.Run(); err != nil {
 						log.Fatal(err)
 					}
@@ -83,22 +94,21 @@ var menuCmd = &cobra.Command{
 					detail, _ := moviesService.GetMovieDetail(i)
 					s.Stop()
 
-					tprogram = tea.NewProgram(printMovie.InitialModel(detail, stepChan))
+					tprogram = tea.NewProgram(printMovie.InitialModel(detail, &program))
 					if _, err := tprogram.Run(); err != nil {
 						log.Fatal(err)
 					}
 
 				default:
-					doneChan <- true
+					program.DoneChan <- true
 				}
 
 			}
 		}()
 
-		stepChan <- 1
-		<-doneChan
-		close(stepChan)
-		close(doneChan)
+		program.StepChan <- 1
+		<-program.DoneChan
+		program.Terminate()
 	},
 }
 

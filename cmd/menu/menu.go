@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/FrancoMusolino/film-cli/cmd/movies"
+	"github.com/nicksnyder/go-i18n/i18n"
 )
 
 type Item struct {
@@ -18,28 +19,28 @@ type Menu struct {
 	Movies []Item
 }
 
-func InitMenu() *Menu {
+func InitMenu(t i18n.TranslateFunc) *Menu {
 	menu := &Menu{
 		Items: []Item{
 			{
 				Key:     "top-rated",
-				Name:    "Mejor calificadas",
-				Headers: "Obten las películas mejores calificadas",
+				Name:    t("top-rated.title"),
+				Headers: t("top-rated.desc"),
 			},
 			{
 				Key:     "now-playing",
-				Name:    "Reproduciendo ahora",
-				Headers: "Obten las películas que se están reproduciendo en las pantallas de los cines",
+				Name:    t("now-playing.title"),
+				Headers: t("now-playing.desc"),
 			},
 			{
 				Key:     "popular",
-				Name:    "Populares",
-				Headers: "Obten las películas más populares del momento",
+				Name:    t("popular.title"),
+				Headers: t("popular.desc"),
 			},
 			{
 				Key:     "upcoming",
-				Name:    "Próximamente",
-				Headers: "Obten las películas que estarán en cartelera en los próximos días",
+				Name:    t("upcoming.title"),
+				Headers: t("upcoming.desc"),
 			},
 		},
 	}

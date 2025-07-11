@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/FrancoMusolino/film-cli/cmd/menu"
+	"github.com/FrancoMusolino/film-cli/cmd/program"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -29,7 +30,7 @@ type model struct {
 	cursor     int
 	choice     *Selection
 	header     string
-	stepChan   chan int
+	program    *program.Program
 	stepNumber int
 }
 
@@ -37,7 +38,7 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
-func InitialModelMulti(choices []menu.Item, selection *Selection, header string, stepNumber int, stepChan chan int) model {
+func InitialModelMulti(choices []menu.Item, selection *Selection, header string, program *program.Program, stepNumber int) model {
 	var cursor int
 	for i, choice := range choices {
 		if choice.Key == selection.Choice {
@@ -51,7 +52,7 @@ func InitialModelMulti(choices []menu.Item, selection *Selection, header string,
 		choices:    choices,
 		choice:     selection,
 		header:     titleStyle.Render(header),
-		stepChan:   stepChan,
+		program:    program,
 		stepNumber: stepNumber,
 	}
 }
@@ -63,7 +64,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		case "ctrl+c", "q":
-			m.stepChan <- 0
+			m.program.StepChan <- 0
 			return m, tea.Quit
 
 		case "up", "k":
@@ -78,11 +79,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter", " ":
 			m.choice.Update(m.choices[m.cursor].Key)
-			m.stepChan <- m.stepNumber + 1
+			m.program.StepChan <- m.stepNumber + 1
 			return m, tea.Quit
 
 		case "esc":
-			m.stepChan <- m.stepNumber - 1
+			m.program.StepChan <- m.stepNumber - 1
 			return m, tea.Quit
 		}
 
@@ -108,7 +109,10 @@ func (m model) View() string {
 		s += fmt.Sprintf("%s %s\n%s\n\n", cursor, name, desc)
 	}
 
-	s += fmt.Sprintf("Persiona %s para confirmar la selección.\n\n", focusedStyle.Render("Enter"))
-	s += fmt.Sprintf("Persiona %s para volver atrás o salir del menú.\n\n", focusedStyle.Render("Esc"))
+	s += fmt.Sprintf(m.program.Translate("foward", map[string]interface{}{"KeyStroke": fmt.Sprint(focusedStyle.Render("Enter"))}))
+	s += "\n\n"
+	s += fmt.Sprintf(m.program.Translate("back", map[string]interface{}{"KeyStroke": fmt.Sprint(focusedStyle.Render("Esc"))}))
+	s += "\n"
+
 	return s
 }

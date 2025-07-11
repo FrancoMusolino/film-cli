@@ -1,0 +1,58 @@
+[
+  { "id": "top-rated.title", "translation": "Mejor calificadas" },
+  {
+    "id": "top-rated.desc",
+    "translation": "Obten las películas mejores calificadas"
+  },
+  { "id": "now-playing.title", "translation": "Reproduciendo ahora" },
+  {
+    "id": "now-playing.desc",
+    "translation": "Obten las películas que se están reproduciendo en las pantallas de los cines"
+  },
+  { "id": "popular.title", "translation": "Populares" },
+  {
+    "id": "popular.desc",
+    "translation": "Obten las películas más populares del momento"
+  },
+  { "id": "upcoming.title", "translation": "Próximamente" },
+  {
+    "id": "upcoming.desc",
+    "translation": "Obten las películas que estarán en cartelera en los próximos días"
+  },
+  {
+    "id": "foward",
+    "translation": "Persiona {{.KeyStroke}} para confirmar la selección."
+  },
+  {
+    "id": "back",
+    "translation": "Persiona {{.KeyStroke}} para volver atrás."
+  },
+  {
+    "id": "choose-option",
+    "translation": "Elige una opción de nuestro menú"
+  },
+  {
+    "id": "choose-movie",
+    "translation": "Elige una película"
+  },
+  {
+    "id": "genre-label",
+    "translation": "Géneros"
+  },
+  {
+    "id": "origin-country-label",
+    "translation": "País de origen"
+  },
+  {
+    "id": "original-language-label",
+    "translation": "Lenguaje original"
+  },
+  {
+    "id": "votes-label",
+    "translation": "Votos"
+  },
+  {
+    "id": "adults-only",
+    "translation": "Para adultos solamente"
+  }
+]

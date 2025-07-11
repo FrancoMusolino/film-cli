@@ -1,0 +1,55 @@
+[
+  { "id": "top-rated.title", "translation": "Top Rated" },
+  { "id": "top-rated.desc", "translation": "Get the highest rated movies" },
+  { "id": "now-playing.title", "translation": "Now Playing" },
+  {
+    "id": "now-playing.desc",
+    "translation": "Get the movies currently playing in theaters"
+  },
+  { "id": "popular.title", "translation": "Popular" },
+  {
+    "id": "popular.desc",
+    "translation": "Get the most popular movies right now"
+  },
+  { "id": "upcoming.title", "translation": "Upcoming" },
+  {
+    "id": "upcoming.desc",
+    "translation": "Get the movies that will be released in theaters in the coming days"
+  },
+  {
+    "id": "foward",
+    "translation": "Press {{.KeyStroke}} to confirm your selection."
+  },
+  {
+    "id": "back",
+    "translation": "Press {{.KeyStroke}} to go back."
+  },
+  {
+    "id": "choose-option",
+    "translation": "Choose an option from our menu"
+  },
+  {
+    "id": "choose-movie",
+    "translation": "Choose a movie"
+  },
+  {
+    "id": "genre-label",
+    "translation": "Genres"
+  },
+  {
+    "id": "origin-country-label",
+    "translation": "Origin Country"
+  },
+  {
+    "id": "original-language-label",
+    "translation": "Original Language"
+  },
+  {
+    "id": "votes-label",
+    "translation": "Votes"
+  },
+  {
+    "id": "adults-only",
+    "translation": "Adults Only"
+  }
+]
